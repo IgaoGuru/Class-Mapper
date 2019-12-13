@@ -1,5 +1,6 @@
 import numpy as np
-from Oracle1 import get_happiness
+from Oracle1 import get_hh_ss
+from Oracle1 import hh_to_csv
 import time
 
 #names isnt being used right now because I dont have a list of 120 names,
@@ -128,7 +129,9 @@ preferences = get_random_preferences(num_students)
 #     student_satisfier_1(id, classrooms, preferences)
 
 
-happiness, sadness = get_happiness(classrooms, preferences)
+hh, ss = get_hh_ss(classrooms, preferences)
+
+hh_to_csv(classrooms, preferences)
 
 print(classrooms)
-print(happiness, sadness)
+print(hh, ss)

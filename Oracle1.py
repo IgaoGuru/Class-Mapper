@@ -1,14 +1,16 @@
 import numpy as np
 
 #this is the oracle for the class mapper algorithms.
-#this algorithms determines the happiness and sadness of a given classroom map.
-#happiness is defined as the sum of all satisfied preferences.
-#sadness is defined as the sum of all unsatisfied preferences.
+#this algorithms determines the Happiness and Sadness of a given classroom map.
+#Happiness is defined as the sum of all satisfied preferences.
+#hh is abbreviated as "hh"
+#Sadness is defined as the sum of all unsatisfied preferences.
+#Sadness is abbreviated as "ss"
 
-def get_happiness(classroom_map, preferences):
+def get_hh_ss(classroom_map, preferences):
 
-    happiness = 0
-    sadness = 0
+    hh = 0
+    ss = 0
 
     num_students = preferences.shape[0]
 
@@ -22,7 +24,29 @@ def get_happiness(classroom_map, preferences):
 
         for preference in stud_prefs:
             if preference in classroom_map[:, stud_coord[1]]:
-                happiness += 1
+                hh += 1
             else:
-                sadness += 1
-    return happiness, sadness
+                ss += 1
+    return hh, ss
+
+def hh_to_csv(classroom_map, preferences):
+
+    num_students = preferences.shape[0]
+
+    with open('hhhtocsv', 'w') as csv:
+        for student in range(num_students):
+            hh = 0
+            stud_coord = np.where(classroom_map == student)
+
+            # defines list of student preferences
+            stud_prefs = np.where(preferences[student, :] == 1)[0]
+
+            for preference in stud_prefs:
+                if preference in classroom_map[:, stud_coord[1]]:
+                    hh += 1
+
+
+            csv.write('{}, {}'.format(student, hh))
+            csv.write('\n')
+
+
