@@ -1,5 +1,9 @@
 import numpy as np
+from Oracle1 import get_happiness
+import time
 
+#names isnt being used right now because I dont have a list of 120 names,
+#in a real life scenario, the names dictionary would be a 120 keys dic. with 120 names
 names = {
     0 : "João",
     1 : "Alice",
@@ -8,21 +12,22 @@ names = {
     4 : "Chuck Norris"
 }
 
-np.random.seed(0)
-num_classes = 2
-num_students = len(names.keys())
+np.random.seed(3)
+num_classes = 4
+num_students = 120
 num_students_per_classroom = int(np.ceil(num_students/num_classes))
 
 classrooms = (np.zeros((num_students_per_classroom, num_classes)) - 1).astype(int)
 class_y = classrooms.shape[1]
 class_x = classrooms.shape[0]
 
-def choose_students(chooser, num_students):
-    chosen = np.random.randint(0, num_students - 1, 2)
+
+def choose_students(chooser, num_students, choice_per_student):
+    chosen = np.random.randint(0, num_students - 1, choice_per_student)
 
     #keep chosing until chooser not in choser and chosen has 2 different students :)
     while chooser in chosen or chosen[0] == chosen[1]:
-        chosen = np.random.randint(0, num_students - 1, 2)
+        chosen = np.random.randint(0, num_students - 1, choice_per_student)
     return chosen
 
 def nothing(classroom):
@@ -97,7 +102,7 @@ def get_random_preferences(num_students):
     preferences = np.zeros((num_students, num_students)).astype(int)
 
     for i in range(num_students):
-        chosen = choose_students(i, num_students)
+        chosen = choose_students(i, num_students, choice_per_student=4)
         preferences[i, chosen] = 1
     #ensures diagonal is all zeros
     assert(np.all(np.diagonal(preferences) == np.zeros((num_students, ))))
@@ -115,23 +120,15 @@ for student in shuffled_students:
     x_axis = int(np.floor(str - (y_axis * class_x)))
     str += 1
     classrooms[x_axis, y_axis] = student
-
 print(classrooms)
 
-#preferences = get_random_preferences(num_students)
+preferences = get_random_preferences(num_students)
 
-preferences = np.zeros((num_students, num_students)).astype(int)
-preferences[0, 1] = 1
-preferences[0, 2] = 1
-preferences[1, 0] = 1
-preferences[1, 2] = 1
-preferences[2, 0] = 1
-preferences[2, 1] = 1
-preferences[3, 4] = 1
-preferences[3, 1] = 1
-preferences[4, 3] = 1
+# for id in names.keys():
+#     student_satisfier_1(id, classrooms, preferences)
 
-for id in names.keys():
-    student_satisfier_1(id, classrooms, preferences)
+
+happiness, sadness = get_happiness(classrooms, preferences)
 
 print(classrooms)
+print(happiness, sadness)
