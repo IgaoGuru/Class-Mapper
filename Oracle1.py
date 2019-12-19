@@ -20,7 +20,7 @@ def get_hh_ss(classroom_map, preferences):
         #defines list of student preferences
         stud_prefs = np.where(preferences[student, :] == 1)[0]
 
-        print(student, stud_prefs)
+        #print(student, stud_prefs)
 
         for preference in stud_prefs:
             if preference in classroom_map[:, stud_coord[1]]:
@@ -29,11 +29,11 @@ def get_hh_ss(classroom_map, preferences):
                 ss += 1
     return hh, ss
 
-def hh_to_csv(classroom_map, preferences):
+def per_student_hh_to_csv(classroom_map, preferences):
 
     num_students = preferences.shape[0]
 
-    with open('hhhtocsv', 'w') as csv:
+    with open('hhhtocsv', 'w+') as csv:
         for student in range(num_students):
             hh = 0
             stud_coord = np.where(classroom_map == student)
@@ -45,8 +45,10 @@ def hh_to_csv(classroom_map, preferences):
                 if preference in classroom_map[:, stud_coord[1]]:
                     hh += 1
 
+            if student < (num_students - 1):
+                csv.write('{}, '.format(hh))
+            else:
+                csv.write('{}'.format(hh))
 
-            csv.write('{}, {}'.format(student, hh))
-            csv.write('\n')
 
 

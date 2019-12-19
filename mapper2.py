@@ -1,6 +1,6 @@
 import numpy as np
 from Oracle1 import get_hh_ss
-from Oracle1 import hh_to_csv
+from Oracle1 import per_student_hh_to_csv
 import time
 
 #names isnt being used right now because I dont have a list of 120 names,
@@ -17,10 +17,9 @@ np.random.seed(3)
 num_classes = 4
 num_students = 120
 num_students_per_classroom = int(np.ceil(num_students/num_classes))
+num_random_preferences = 10
+num_runs = 10
 
-classrooms = (np.zeros((num_students_per_classroom, num_classes)) - 1).astype(int)
-class_y = classrooms.shape[1]
-class_x = classrooms.shape[0]
 
 
 def choose_students(chooser, num_students, choice_per_student):
@@ -33,6 +32,24 @@ def choose_students(chooser, num_students, choice_per_student):
 
 def nothing(classroom):
     pass
+
+def satisfier_deployer(satisfier_func, preferences):
+
+    classrooms = random_deployer(preferences)
+
+    for id in range(num_students):
+        satisfier_func(id, classrooms, preferences)
+
+    return classrooms
+
+def random_deployer(preferences):
+
+    num_students = preferences.shape[0]
+    classrooms = (np.zeros((num_students_per_classroom, num_classes)) - 1).astype(int)
+
+    randomly_allocate_students(classrooms, num_students)
+
+    return classrooms
 
 def student_satisfier_1(student, classrooms, preferences):
     prefs = preferences[student, :]
@@ -49,7 +66,7 @@ def student_satisfier_1(student, classrooms, preferences):
             same_class.add(classrooms[i, j][0])
 
     not_same_class = set(stud_prefs) - same_class
-    print(stud_prefs, same_class, not_same_class)
+    #print(stud_prefs, same_class, not_same_class)
 
     #if number of preferences in my classroom is greater than the ones outside; bring the ones outside in :)
     if len(same_class) >= (len(stud_prefs) - len(same_class)):
@@ -62,7 +79,7 @@ def student_satisfier_1(student, classrooms, preferences):
 
         for student_idx ,student in enumerate(to_be_swapped):
             swapper(student, stud_prefs[student_idx], classrooms)
-        print(classrooms)
+        #print(classrooms)
 
     #if number of preferences in my classroom is smaller than the ones outside; put the student in the other classroom :)
     else:
@@ -79,7 +96,7 @@ def student_satisfier_1(student, classrooms, preferences):
             to_be_swapped = np.random.choice(classrooms[:, swap_classroom_idx])
         # calls swapper() to swap the original student with the chosen one
         swapper(student, to_be_swapped, classrooms)
-        print(classrooms)
+        #print(classrooms)
 
 
 def count_pref(classroom, stud_pref):
@@ -107,31 +124,49 @@ def get_random_preferences(num_students):
         preferences[i, chosen] = 1
     #ensures diagonal is all zeros
     assert(np.all(np.diagonal(preferences) == np.zeros((num_students, ))))
-    print(preferences)
+    #print(preferences)
     return preferences
 
-shuffled_students = np.random.choice(np.array(range(0, num_students)), (num_students, ), False)
-print(shuffled_students)
-str = 0
-#inserts each student in one slot in classrooms
-for student in shuffled_students:
-    #sets current column
-    y_axis = int(np.floor((str / class_x)))
-    #sets current row
-    x_axis = int(np.floor(str - (y_axis * class_x)))
-    str += 1
-    classrooms[x_axis, y_axis] = student
-print(classrooms)
-
-preferences = get_random_preferences(num_students)
-
-# for id in names.keys():
-#     student_satisfier_1(id, classrooms, preferences)
+def randomly_allocate_students(classrooms, num_students, verbose=False):
+    shuffled_students = np.random.choice(np.array(range(0, num_students)), (num_students, ), False)
+    str = 0
+    #inserts each student in one slot in classrooms
+    for student in shuffled_students:
+        #sets current column
+        y_axis = int(np.floor((str / classrooms.shape[0])))
+        #sets current row
+        x_axis = int(np.floor(str - (y_axis * classrooms.shape[0])))
+        str += 1
+        classrooms[x_axis, y_axis] = student
+    if verbose:
+        print(classrooms)
 
 
-hh, ss = get_hh_ss(classrooms, preferences)
 
-hh_to_csv(classrooms, preferences)
+with open('hhhtocsv', 'w') as csv:
 
-print(classrooms)
-print(hh, ss)
+    for i in range(num_random_preferences):
+        random_preferences = get_random_preferences(num_students)
+
+        for j in range(num_runs):
+
+            #runs my algorithm
+            classroom = satisfier_deployer(student_satisfier_1, random_preferences)
+
+            happiness, _ = get_hh_ss(classroom, random_preferences)
+
+            csv.write(str(happiness) + ",")
+
+            #runs random alg.
+            classroom = random_deployer(random_preferences)
+
+            happiness, _ = get_hh_ss(classroom, random_preferences)
+
+            if j < (num_runs - 1):
+                csv.write(str(happiness) + ",")
+            else:
+                csv.write(str(happiness))
+            # print(f'{j / num_runs:.2f}%', end='\n')
+
+        csv.write('\n')
+        print(f'{100*(i+1)/num_random_preferences:.0f}%', end = '\n')
